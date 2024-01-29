@@ -1,0 +1,4 @@
+flask
+firebase_admin
+python-docx
+pymupdf
