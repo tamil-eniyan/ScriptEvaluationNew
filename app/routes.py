@@ -1,4 +1,7 @@
-from flask import render_template, redirect, url_for, flash
+import spacy
+from google.cloud import vision
+from google.oauth2 import service_account
+from flask import render_template, redirect, url_for, flash, request
 from werkzeug.utils import secure_filename
 from app import app, db, storage_client
 import os
@@ -26,6 +29,43 @@ def convert_docx_to_text(docx_data):
     for paragraph in doc.paragraphs:
         text_content += paragraph.text + '\n'
     return text_content
+
+def process_text_into_paragraphs(text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(text)
+
+    paragraphs = []
+    current_paragraph = []
+
+    for sentence in doc.sents:
+        current_paragraph.append(sentence.text)
+
+    # Check if the current paragraph is not empty before appending
+    if current_paragraph:
+        paragraphs.append(' '.join(current_paragraph))
+
+    return paragraphs
+
+def detect_handwriting(image_content):
+    """Detects handwriting features in an image using Google Cloud Vision API."""
+    # Set up credentials explicitly
+    credentials_path = 'C:/Ganglia/scriptEvalToken/script-evaluation-a41aac110e2b.json'
+    credentials = service_account.Credentials.from_service_account_file(credentials_path)
+    client = vision.ImageAnnotatorClient(credentials=credentials)
+
+    # Create a Vision API image object
+    image = vision.Image(content=image_content)
+
+    try:
+        # Perform document text detection
+        response = client.document_text_detection(image=image)
+
+        # Extract and return the text
+        return response.full_text_annotation.text
+
+    except Exception as e:
+        print(f"Error during document text detection: {str(e)}")
+        return None
 
 @app.route('/')
 def index():
@@ -101,10 +141,20 @@ def add_student():
         student_data['answer_script_filename'] = answer_script_filename
         student_data['answer_script_url'] = answer_script_url
 
-        # Store student data in Firestore
-        db.collection('students').document(form_student.roll_number.data).set(student_data)
+        # Download the image content from Firebase Storage
+        answer_script_content = answer_script_blob.download_as_bytes()
 
-        flash('Student added successfully!', 'success')
+        # Use Google Cloud Vision API to detect handwriting in the answer script
+        extracted_text = detect_handwriting(answer_script_content)
+
+        if extracted_text:
+            # Store the extracted text in Firestore
+            student_data['answer_script_text'] = extracted_text
+            db.collection('students').document(form_student.roll_number.data).set(student_data)
+
+            flash('Student added successfully!', 'success')
+        else:
+            flash('Error processing handwriting. Please try again.', 'danger')
         
 
     return redirect(url_for('index'))
