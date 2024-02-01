@@ -11,6 +11,8 @@ import fitz
 from app.forms import SubjectForm, StudentForm
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'docx'}
+GOOGLE_VISION_CREDENTIALS_PATH = "F:\Ganglia\ScriptEvaluationNeWW\ScriptEvaluationNew\google_vision_cred.json"
+FIREBASE_CREDENTIALS_PATH = "F:\Ganglia\ScriptEvaluationNeWW\ScriptEvaluationNew\firebase_cred.json"
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -49,7 +51,7 @@ def process_text_into_paragraphs(text):
 def detect_handwriting(image_content):
     """Detects handwriting features in an image using Google Cloud Vision API."""
     # Set up credentials explicitly
-    credentials_path = 'C:/Ganglia/scriptEvalToken/script-evaluation-a41aac110e2b.json'
+    credentials_path = GOOGLE_VISION_CREDENTIALS_PATH
     credentials = service_account.Credentials.from_service_account_file(credentials_path)
     client = vision.ImageAnnotatorClient(credentials=credentials)
 
