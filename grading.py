@@ -111,7 +111,7 @@ def batch_detect_handwriting(image_paths, credentials_path):
 
     awaded_marks = gemini_grading(extracted_text,answer_scheme,max_marks)
     print("")
-    print("The marks awarded to the student is : "+max_marks)
+    print("The marks awarded to the student is : "+awaded_marks)
 
 
 # Replace 'your_image_paths' with a list of paths to your image files
