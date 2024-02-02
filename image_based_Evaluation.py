@@ -13,7 +13,7 @@ GEMINI_API = "AIzaSyCtQ914aymvoEhR07yzd9wB0EnkGBCK8JY"
 
 pdf_paths = [
     r'test_data/biology_1_teacher_answer.pdf',
-    r'test_data/biology_1_student_answer.pdf',
+    r'test_data/Answer1.pdf',
 # Add more paths as needed
 ]
 
@@ -86,7 +86,7 @@ def evaluation_script(expectedAnswerpaths,studentAnswerpath,question,max_marks):
                 genai.configure(api_key=GEMINI_API)
                 model_vision = genai.GenerativeModel('gemini-pro-vision')
 
-                response =  model_vision.generate_content([f"The images below are the Expected answer and the student given answer for the question : {question} , please Evaluate them and give the marksout of {max_marks}, Give me only the mark, no other explanation or suggestion or sorry message or any alternatives",expectedAnswer,studentAnswer])
+                response =  model_vision.generate_content([f"The images below are the Expected answer and the student given answer for the question : {question} and the expected answer is {expectedAnswer}, please Evaluate them and give the marksout of {max_marks}, just give me the mark no explanition or sorry mssage required",studentAnswer])
          
                 awarded_marks = response.text
 
