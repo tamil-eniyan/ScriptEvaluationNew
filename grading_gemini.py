@@ -58,7 +58,7 @@ def evaluate_the_AnswerScript_gemini(image_paths):
             genai.configure(api_key=GEMINI_API)
             model_vision = genai.GenerativeModel('gemini-pro-vision')
 
-            response =  model_vision.generate_content(["Extract the text in this image", img])
+            response =  model_vision.generate_content(["Extract the text in this image, do not include stricked out lines", img])
         
             extracted_text += response.text
 
@@ -66,8 +66,8 @@ def evaluate_the_AnswerScript_gemini(image_paths):
         
      
    
-        answer_scheme = docx2txt.process("/home/tamil/ganglia/ScriptEvaluationNew/test_data/right_answer.docx")
-        print(answer_scheme)
+        answer_scheme = docx2txt.process("app/uploads/testEval.docx")
+        # print(answer_scheme)
 
         max_marks='10'
 
@@ -81,8 +81,8 @@ def evaluate_the_AnswerScript_gemini(image_paths):
 
 # Replace 'your_image_paths' with a list of paths to your image files
 image_paths = [
-    r'/home/tamil/ganglia/ScriptEvaluationNew/test_data/student_answer.jpeg',
-    r'/home/tamil/ganglia/ScriptEvaluationNew/test_data/student_answer_part2.jpeg',
+    r'app/uploads/Answer1.png',
+    r'app/uploads/Answer2.png',
 # Add more paths as needed
 ]
 

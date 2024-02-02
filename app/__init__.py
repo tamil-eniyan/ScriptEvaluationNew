@@ -2,8 +2,8 @@ from flask import Flask
 import secrets
 from firebase_admin import credentials, firestore, initialize_app, storage
 
-GOOGLE_VISION_CREDENTIALS_PATH = "F:\Ganglia\ScriptEvaluationNeWW\ScriptEvaluationNew\google_vision_cred.json"
-FIREBASE_CREDENTIALS_PATH = "F:\Ganglia\ScriptEvaluationNeWW\ScriptEvaluationNew\firebase_cred.json"
+# GOOGLE_VISION_CREDENTIALS_PATH = "F:\Ganglia\ScriptEvaluationNeWW\ScriptEvaluationNew\google_vision_cred.json"
+FIREBASE_CREDENTIALS_PATH = "C:/Ganglia/scriptEvalToken/credentials.json"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
