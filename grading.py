@@ -6,6 +6,10 @@ import google.generativeai as genai
 import docx2txt
 
 GEMINI_API = "AIzaSyCtQ914aymvoEhR07yzd9wB0EnkGBCK8JY"
+GOOGLE_VISION_CREDENTIALS_PATH = r"KEYS\google_vision_cred.json"
+FIREBASE_CREDENTIALS_PATH = r"KEYS\firebase_cred.json"
+RIGHT_ANSWER_PATH = r"test_data\right_answer.docx"
+STUDENT_ANSWER_PATH = r"test_data\student_answer.jpeg"
 
 generation_config = {
         "temperature":0,
@@ -104,23 +108,23 @@ def batch_detect_handwriting(image_paths, credentials_path):
     
     
 
-    answer_scheme = docx2txt.process("/home/tamil/ScriptEvaluationNew/test_data/right_answer.docx")
+    answer_scheme = docx2txt.process(RIGHT_ANSWER_PATH)
     print(answer_scheme)
 
     max_marks='10'
 
-    awaded_marks = gemini_grading(extracted_text,answer_scheme,max_marks)
+    awaded_marks = gemini_grading(extracted_text,answer_scheme,max_marks).split("/")[0]
     print("")
     print("The marks awarded to the student is : "+awaded_marks)
 
 
 # Replace 'your_image_paths' with a list of paths to your image files
 image_paths = [
-    '/home/tamil/ScriptEvaluationNew/test_data/student_answer.jpeg',
+    STUDENT_ANSWER_PATH,
     # Add more paths as needed
 ]
 
 # Replace 'path/to/your/keyfile.json' with the actual path to your Google Cloud service account key JSON file
-credentials_path = '/home/tamil/keys/unused/script-evaluation-a41aac110e2b.json'
+credentials_path = GOOGLE_VISION_CREDENTIALS_PATH
 
 batch_detect_handwriting(image_paths, credentials_path)
