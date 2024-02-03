@@ -17,7 +17,7 @@ GEMINI_API = "AIzaSyCtQ914aymvoEhR07yzd9wB0EnkGBCK8JY"
 total_marks=0
 
 pdf_paths = [
-    r'test_data/biology_1_teacher_answer.pdf',
+    r'test_data/testEval.pdf',
     r'test_data/Answer1.pdf',
 # Add more paths as needed
 ]
