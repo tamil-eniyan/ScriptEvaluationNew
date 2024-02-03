@@ -21,3 +21,11 @@ class EvalForm(FlaskForm):
     subject_id = StringField('Subject ID', validators=[DataRequired()])
     evaluation_scheme_csv = FileField('Evaluation Schemes', validators=[DataRequired()])
     submit = SubmitField('Add Scheme')
+
+class AnswerScriptForm(FlaskForm):
+    exam_type = StringField('Exam Type', validators=[DataRequired()])
+    subject_id = StringField('Subject ID', validators=[DataRequired()])
+    student_id = StringField('Student ID', validators=[DataRequired()])
+    answer_script_file = FileField('Answer Script', validators=[DataRequired()])
+    submit = SubmitField('Add Answer Script')
+

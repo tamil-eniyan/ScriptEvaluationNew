@@ -63,8 +63,8 @@ def gemini_analysis_digram(expectedAnswer_imagepaths,studentAnswer_imagepath,que
 
 # Replace 'your_image_paths' with a list of paths to your image files
 image_paths = [
-    r'/home/tamil/ScriptEvaluationNew/test_data/Neuron_Expected_answer.jpg',
-    r'/home/tamil/ScriptEvaluationNew/test_data/Neuron_Given_Answer.jpeg',
+    r'test_data/Neuron_Expected_answer.jpg',
+    r'test_data/Neuron_Given_Answer.jpeg',
 # Add more paths as needed
 ]
 
