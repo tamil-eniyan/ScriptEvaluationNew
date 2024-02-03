@@ -9,6 +9,8 @@ import PIL
 import base64
 from io import BytesIO
 import pandas as pd
+import PySimpleGUI as sg
+from pathlib import Path
 
 import fitz
  
@@ -16,11 +18,10 @@ GEMINI_API = "AIzaSyCtQ914aymvoEhR07yzd9wB0EnkGBCK8JY"
 
 total_marks=0
 
-pdf_paths = [
-    r'test_data/testEval.pdf',
-    r'test_data/Answer1.pdf',
-# Add more paths as needed
-]
+layout = [[sg.Text("Evaluation Scheme"), sg.Input(key="-ES-"), sg.FileBrowse(file_types=(("Evaluation Scheme", "*.csv"),))],
+         [sg.Text("Student Answer"), sg.Input(key="-AS-"), sg.FileBrowse(file_types=(("Student Answer script", "*.csv"),))],
+         [sg.Exit(), sg.Button("Evaluate")],]
+
 
 generation_config = {
         "temperature":0,
@@ -143,23 +144,19 @@ def string_to_image(image_string):
 
 
 
-es_path = "test_data/biology_ES/biology_ES.csv"
-no_students = 1
-#as_path=[]
-#as_path.append(input("Enter the Path of the student answer script csv : "))
 
 
-evaluationscheme_dataframe = pd.read_csv (es_path)
-#print(evaluationscheme_dataframe)
 
 
-print("[+]Evaluating the Questions.....")
 
-for i in range(no_students):
+
+def input_fun(es_path,student_answerscripts_path):
     #student_answerscripts_path = input("Enter the path of the StudentAnswer scripts : ")
-    student_answerscripts_path = "test_data/biology_AS/exam_biology_202000497.csv"
+    
+    print("[+]Evaluating the Questions.....")
+    evaluationscheme_dataframe = pd.read_csv (es_path)
     total_marks = 0
-
+    
     studentanswerscripts_dataframe = pd.read_csv (student_answerscripts_path)
     #print(studentanswerscripts_dataframe)
     
@@ -168,7 +165,7 @@ for i in range(no_students):
         #print(rows)                       
         temp = evaluationscheme_dataframe[evaluationscheme_dataframe["Qid"] == rows.Qid]
         
-        #print(f"{temp.Expected_answer_pdf_path.to_numpy()[0]} # {rows.path} # {temp.Question.to_numpy()[0]} # {str(temp.Max_Marks.to_numpy()[0])} # {str(temp.Qid.to_numpy()[0])}")
+        
 
         temp_ES_path = temp.Expected_answer_pdf_path.to_numpy()[0]
         temp_AS_path = rows.path
@@ -178,10 +175,30 @@ for i in range(no_students):
             
         total_marks += int(evaluate_answer(temp_ES_path,temp_AS_path,temp_question,temp_max_marks,temp_Qid))
         
-print("[+]Evaluation Completed sucessfully :) ")
+    print("[+]Evaluation Completed sucessfully :) ")
 
-print(f"The total marks is {total_marks}")
+    print(f"The total marks is {total_marks}")
+    sg.popup_no_titlebar(f"The Total Marks is {total_marks}")
 
+#***************************************************Driver Function********************************************************************
+
+
+window = sg.Window("Answer Script Evaluation", layout)
+
+while True:
+    event,  values = window.read()
+    
+    print(event, values)
+    if event in (sg.WINDOW_CLOSED, "Exit"):
+        break
+    if event == "Evaluate":
+
+        input_fun(
+                es_path=values["-ES-"],
+                student_answerscripts_path=values["-AS-"],)            
+
+
+window.close()
 
 
 
