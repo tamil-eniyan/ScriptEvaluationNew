@@ -6,6 +6,8 @@ import google.generativeai as genai
 import docx2txt
 from PIL import Image
 import PIL
+import base64
+from io import BytesIO
 
 import fitz
  
@@ -45,7 +47,7 @@ safety_settings = [
 
 
 
-def pdf2img(pdf_path):
+def pdf2img2string(pdf_path):
     try:
         pdf_document = fitz.open(pdf_path)
         image_list = []
@@ -67,26 +69,34 @@ def pdf2img(pdf_path):
             offset += image.height
 
     # Save the combined image
-        combined_image.save("temp.jpeg","JPEG")
+        combined_image.save("combinedimage_temp.jpeg","JPEG")
+        return(image_to_string("combinedimage_temp.jpeg"))
+
 
     except Exception as e:
             print(f"Error during image conversion detection: {str(e)}")
 
 
-def evaluation_script(expectedAnswerpaths,studentAnswerpath,question,max_marks):
+def evaluation_script(expectedAnswerpath,studentAnswerpath,question,max_marks):
     extracted_text = ""
+    additional_points = ""
     try:
                 
-                pdf2img(expectedAnswerpaths)
+                image_string = pdf2img2string(expectedAnswerpath)
+                string_to_image(image_string)
                 expectedAnswer = PIL.Image.open("temp.jpeg")
 
-                pdf2img(studentAnswerpath)
-                studentAnswer = PIL.Image.open("temp.jpeg")    
+                image_string = pdf2img2string(studentAnswerpath)
+                string_to_image(image_string)
+                studentAnswer = PIL.Image.open("temp.jpeg")
+
+               
+
 
                 genai.configure(api_key=GEMINI_API)
-                model_vision = genai.GenerativeModel('gemini-pro-vision')
+                model_vision = genai.GenerativeModel('gemini-pro-vision',safety_settings=safety_settings)
 
-                response =  model_vision.generate_content([f"The images below are the Expected answer and the student given answer for the question : {question} and the expected answer is {expectedAnswer}, please Evaluate them and give the marksout of {max_marks}, just give me the mark no explanition or sorry mssage required",studentAnswer])
+                response =  model_vision.generate_content([f"The images below are the Expected answer and the student given answer for the question : {question} and the expected answer is {expectedAnswer}, please Evaluate them and give the marksout of {max_marks},just give me the mark no explanation or sorry message required {additional_points}",studentAnswer])
          
                 awarded_marks = response.text
 
@@ -96,6 +106,29 @@ def evaluation_script(expectedAnswerpaths,studentAnswerpath,question,max_marks):
     except Exception as e:
             print(f"Error during evaluation : {str(e)}")
   
+
+
+
+def image_to_string(image_path):
+    with open(image_path, "rb") as image_file:
+        # Read binary data
+        binary_data = image_file.read()
+        # Encode binary data to base64
+        encoded_data = base64.b64encode(binary_data)
+        # Convert bytes to string
+        image_string = encoded_data.decode("utf-8")
+    return image_string
+
+
+def string_to_image(image_string):
+    # Decode base64 string to binary data
+    binary_data = base64.b64decode(image_string)
+
+    # Convert binary data to PIL Image
+    image = Image.open(BytesIO(binary_data))
+
+    # Save the image to the specified output path
+    image.save("temp.jpeg")
 
 
 # Replace 'your_image_paths' with a list of paths to your image files
@@ -110,6 +143,7 @@ def evaluation_script(expectedAnswerpaths,studentAnswerpath,question,max_marks):
 #evaluate_the_AnswerScript_gemini(image_paths)
 max_marks = "10"
 question = "Draw and explain the functioning of the human neuron "
+#additional_points = "5 marks for the digram and 5 for the explanation"
 
 evaluation_script(pdf_paths[0],pdf_paths[1],question,max_marks)
 
