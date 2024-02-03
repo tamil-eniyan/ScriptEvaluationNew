@@ -3,7 +3,7 @@
 from flask import render_template, redirect, url_for, flash, request
 from werkzeug.utils import secure_filename
 from app import app, db, storage_client
-from app.forms import EvalForm
+from app.forms import EvalForm, AnswerScriptForm
 import os
 
 ALLOWED_EXTENSIONS = {'csv', 'xlsx'}
@@ -50,10 +50,57 @@ def add_eval():
         })
     
         flash('Evaluation scheme added successfully!', 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('add_answer_script'))
 
     return render_template('add_eval.html', form_eval=form_eval)
 
+
+@app.route('/add_answer_script', methods=['GET', 'POST'])
+def add_answer_script():
+    form_answer_script = AnswerScriptForm()
+
+    if form_answer_script.validate_on_submit():
+        exam_type = form_answer_script.exam_type.data
+        subject_id = form_answer_script.subject_id.data
+        student_id = form_answer_script.student_id.data
+
+        # Create a collection hierarchy
+        # ganglia_grade_ref = db.collection('GangliaGrade1')
+        # exam_type_ref = ganglia_grade_ref.document(exam_type)
+        # subjects_ref = exam_type_ref.collection('subjects')
+        # subject_ref = subjects_ref.document(subject_id)
+        # students_ref = subject_ref.collection('students')
+        # student_ref = students_ref.document(student_id)
+
+        ganglia_grade_ref = db.collection('GangliaGrade1')
+        exam_type_ref = ganglia_grade_ref.document(exam_type)
+        subject_ref = exam_type_ref.collection(subject_id)
+        student_ref = subject_ref.document(student_id)
+
+
+
+        # Upload the answer script to Firebase Storage
+        answer_script_file = form_answer_script.answer_script_file.data
+        if answer_script_file and allowed_file(answer_script_file.filename):
+            answer_script_filename = secure_filename(answer_script_file.filename)
+            answer_script_blob = storage_client.bucket().blob(f'{exam_type}/{subject_id}/{student_id}/{answer_script_filename}')
+            answer_script_blob.upload_from_string(answer_script_file.read(), content_type=answer_script_file.content_type)
+
+            # Get the URL of the uploaded file from Firebase Storage
+            answer_script_url = answer_script_blob.public_url
+
+            # Store the answer script URL directly inside the student_id document
+            student_ref.set({
+                'student_id': student_id,
+                'answer_script_url': answer_script_url
+            })
+
+            flash('Answer script added successfully!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid file format. Please upload a valid file.', 'danger')
+
+    return render_template('add_answer_script.html', form_answer_script=form_answer_script)
 
 
 
