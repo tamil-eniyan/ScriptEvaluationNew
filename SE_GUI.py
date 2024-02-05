@@ -229,5 +229,3 @@ if selected == "Entire Script Evaluation":
 
 
 
-
-
