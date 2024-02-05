@@ -1,10 +1,14 @@
 import streamlit as st
+from streamlit_option_menu import option_menu
 from PIL import Image
 import base64
 from io import BytesIO
 import pandas as pd
 import fitz
 import google.generativeai as genai
+import tempfile
+import os
+from pathlib import Path
 
 GEMINI_API = "AIzaSyCtQ914aymvoEhR07yzd9wB0EnkGBCK8JY"
 
@@ -56,7 +60,7 @@ def pdf2img2string(pdf_path):
         return image_to_string("combinedimage_temp.jpeg")
 
     except Exception as e:
-        print(f"Error during image conversion detection: {str(e)}")
+        print(f"[-]Error during image conversion detection: {str(e)}")
 
 
 def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks, qid):
@@ -88,9 +92,10 @@ def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks, 
         awarded_marks = response.text
 
         print(f"The marks awarded for question {qid} is : {awarded_marks}")
+        st.write(f"The marks awarded for question {qid} is : {awarded_marks}")
         return awarded_marks
     except Exception as e:
-        print(f"Error during evaluation : {str(e)}")
+        print(f"[-]Error during evaluation : {str(e)}")
         print(expectedAnswerpath)
         print(studentAnswerpath)
         print(question)
@@ -143,19 +148,84 @@ def input_fun(es_path, student_answerscripts_path):
         temp_max_marks = str(temp.Max_Marks.to_numpy()[0])
         temp_Qid = str(temp.Qid.to_numpy()[0])
 
-        total_marks += int(
-            evaluate_answer(
-                temp_ES_path, temp_AS_path, temp_question, temp_max_marks, temp_Qid
-            )
-        )
+        total_marks += int(evaluate_answer(temp_ES_path, temp_AS_path, temp_question, temp_max_marks, temp_Qid))
 
     st.write("[+]Evaluation Completed successfully :) ")
     st.write(f"The total marks is {total_marks}")
+    #st.popup_no_titlebar(f"The Total Marks is {total_marks}")
 
-st.title("Answer Script Evaluation")
+#****************************************************************multiple students****************************************************
 
-es_path = st.file_uploader("Upload Evaluation Scheme (CSV)", type=["csv"])
-as_path = st.file_uploader("Upload Student Answer Script (CSV)", type=["csv"])
 
-if st.button("Evaluate") and es_path and as_path:
-    input_fun(es_path, as_path)
+
+
+
+# ***************************************************Menu Function********************************************************************
+
+def one_student():
+    es_path = st.file_uploader("Upload Evaluation Scheme (CSV)", type=["csv"])
+    as_path = st.file_uploader("Upload Student Answer Script (CSV)", type=["csv"])
+
+    if st.button("Evaluate") and es_path and as_path:
+        input_fun(es_path, as_path)
+
+#*********************************************************1question*****************************************************************
+
+
+def one_question():
+    
+
+    
+    es_pdfpath = st.text_input("Evalustion Scheme Path")
+    as_pdfpath = st.text_input("Answer script Path")
+    
+    awarded_marks =  0
+    question = st.text_input("Question: ")
+    max_marks = st.text_input("Maxmium Marks: ")
+
+    
+    if st.button("Evaluate") and es_pdfpath and as_pdfpath and question and max_marks:
+        print(f"[+]Evaluating the Question: [{question}] ......")
+        awarded_marks = evaluate_answer(es_pdfpath,as_pdfpath,question,max_marks,"")
+        st.write("[+]Evaluation Completed successfully :) ")
+        st.write(f"The total marks is {awarded_marks}")
+
+def one_subject():
+    es_path = st.file_uploader("Upload Evaluation Scheme (CSV)", type=["csv"])
+    as_path = st.file_uploader("Upload Student Answer Script (CSV)", type=["csv"])
+
+    if st.button("Evaluate") and es_path and as_path:
+        input_fun(es_path, as_path)
+
+    
+        
+
+#*********************************7Driver*********************************************************
+
+selected = option_menu(
+        menu_title = "Project X",
+        options=["Question Evaluation","Entire Script Evaluation"],
+        default_index=0,
+        orientation="horizontal",
+        )
+
+
+
+if selected == "Question Evaluation":
+    st.title(f"You have Selected {selected}")
+    one_question()
+
+
+if selected == "Entire Script Evaluation":
+    st.title(f"You have Selected {selected}")
+    one_student()
+
+
+#if selected == "One_Subject":
+  #  st.title(f"You have Selected {selected}")
+ #   one_subject()
+
+
+
+
+
