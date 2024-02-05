@@ -151,10 +151,6 @@ def input_fun(es_path, student_answerscripts_path):
 
     st.write("[+]Evaluation Completed successfully :) ")
     st.write(f"The total marks is {total_marks}")
-    st.popup_no_titlebar(f"The Total Marks is {total_marks}")
-
-
-# ***************************************************Driver Function********************************************************************
 
 st.title("Answer Script Evaluation")
 
