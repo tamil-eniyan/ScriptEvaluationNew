@@ -1,12 +1,16 @@
-from flask import Flask
+from fastapi import FastAPI, Depends
+from fastapi.staticfiles import StaticFiles
 import secrets
 from firebase_admin import credentials, firestore, initialize_app, storage
+from fastapi.security import APIKeyCookie, OAuth2PasswordBearer
 
-# GOOGLE_VISION_CREDENTIALS_PATH = "F:\Ganglia\ScriptEvaluationNeWW\ScriptEvaluationNew\google_vision_cred.json"
 FIREBASE_CREDENTIALS_PATH = r"KEYS\firebase_cred.json"
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = secrets.token_hex(16)
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+secret_key = secrets.token_hex(16)
+
+api_key_cookie = APIKeyCookie(name = "session_cookie", auto_error= False)
 cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
 
 firebase_app = initialize_app(cred, {
