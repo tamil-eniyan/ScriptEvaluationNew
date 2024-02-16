@@ -1,0 +1,33 @@
+<!-- app/templates/add_eval.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Evaluation</title>
+</head>
+<body>
+    <h1>Add Evaluation</h1>
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="flash-message {{ message[1] }}">
+                {{ message[0] }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('add_eval') }}" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <label for="exam_type">Exam Type:</label>
+        {{ form.exam_type(size=32) }}
+        <br>
+        <label for="subject_id">Subject ID:</label>
+        {{ form.subject_id(size=32) }}
+        <br>
+        <label for="evaluation_scheme_csv">Evaluation Schemes (CSV or Excel):</label>
+        {{ form.evaluation_scheme_csv() }}
+        <br>
+        <input type="submit" value="Add Scheme">
+    </form>
+</body>
+</html>
