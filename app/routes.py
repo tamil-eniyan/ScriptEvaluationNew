@@ -105,7 +105,7 @@ def add_answer_script(exam_type: str = Form(...), subject_id: str = Form(...), s
         # Get the URL of the uploaded file from Firebase Storage
         answer_script_url = answer_script_blob.public_url
 
-        # Store the answer script URL directly inside the student_id document
+        # Store the Answer Script URL directly inside the student_id document
         student_ref.set({
             'student_id': student_id,
             'answer_script_url': answer_script_url
