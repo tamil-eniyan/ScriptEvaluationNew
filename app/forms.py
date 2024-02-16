@@ -1,31 +1,15 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, FileField
-from wtforms.validators import DataRequired
+from typing_extensions import Unpack
+from fastapi import Form, UploadFile
+from pydantic import BaseModel, ConfigDict
 
-# class SubjectForm(FlaskForm):
-#     subject_id = StringField('Subject ID', validators=[DataRequired()])
-#     subject_name = StringField('Name', validators=[DataRequired()])
-#     evaluation_scheme = FileField('Evaluation Scheme', validators=[DataRequired()])
-#     submit = SubmitField('Add Subject')
+class EvalForm(BaseModel):
+    exam_type: str
+    subject_id: str
+    evaluation_scheme: UploadFile
 
-# class StudentForm(FlaskForm):
-#     roll_number = StringField('Roll Number', validators=[DataRequired()])
-#     name = StringField('Name', validators=[DataRequired()])
-#     sub_name = StringField('Subject Name', validators=[DataRequired()])
-#     answer_script = FileField('Answer Script', validators=[DataRequired()])
-#     submit = SubmitField('Add Student')
-
-
-class EvalForm(FlaskForm):
-    exam_type = StringField('Exam Type', validators=[DataRequired()])
-    subject_id = StringField('Subject ID', validators=[DataRequired()])
-    evaluation_scheme_csv = FileField('Evaluation Schemes', validators=[DataRequired()])
-    submit = SubmitField('Add Scheme')
-
-class AnswerScriptForm(FlaskForm):
-    exam_type = StringField('Exam Type', validators=[DataRequired()])
-    subject_id = StringField('Subject ID', validators=[DataRequired()])
-    student_id = StringField('Student ID', validators=[DataRequired()])
-    answer_script_file = FileField('Answer Script', validators=[DataRequired()])
-    submit = SubmitField('Add Answer Script')
+class AnswerScriptForm(BaseModel):
+    exam_type: str
+    subject_id: str
+    student_id: str
+    answer_script_file: UploadFile
 
