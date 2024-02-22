@@ -81,6 +81,7 @@ def pdf2img(pdf_path):
         combined_image.save("temp.jpeg", "JPEG")
         
 
+@one_api_router.post("/evaluate_answer")
 def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks):
     extracted_text = ""
     additional_points = ""
