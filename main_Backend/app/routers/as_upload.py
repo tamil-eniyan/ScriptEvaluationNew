@@ -12,13 +12,9 @@ import shutil
 from pathlib import Path
 import json
 import pyrebase
-import requests
-import pandas as pd
-import firebase_admin
-from firebase_admin import credentials, storage
 
 
-es_upload_router = APIRouter()
+as_upload_router = APIRouter()
 
 try:
 
@@ -30,8 +26,7 @@ try:
         "messagingSenderId": "955685431488",
         "appId": "1:955685431488:web:41c163453fa74cfad1a525",
         "measurementId": "G-1M4P9LFB0V",
-        "databaseURL":"https://scriptevaluation.firebaseio.com",
-        "serviceAccount":"KEYS/firebase_cred.json"
+        "databaseURL":"https://.firebaseio.com"
         }
     
     
@@ -39,23 +34,11 @@ try:
 
 
     firebase = pyrebase.initialize_app(cred)
-    storage = firebase.storage()
 
 
 except Exception as e:
         print(f"[-]Error during importing of pyrebase at es_upload.py : {str(e)}")
         
-
-
-
-def is_file_present(file_path_cloud,file_path_local):
-    try:
-        file  = storage.child(file_path_cloud).download(file_path_local)
-        print(f"[+]File Present at :  {file} ")
-        return True
-    except Exception as e:
-        print(f"[-]csv file not present: {e}")
-        return False
 
 
 
@@ -125,74 +108,30 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
         es_JPEGpath = Image.open(f"expectedanswer.jpeg")
         
         
-        
+        storage = firebase.storage()
+
         
         path_on_cloud_PDF = f"main_ES/{exam_id}/{subject_id}/{qid}/expectedanswer.pdf"
         path_local_PDF = "expectedanswer.pdf"
 
         path_on_cloud_JPEG = f"main_ES/{exam_id}/{subject_id}/{qid}/expectedanswer.jpeg"
         path_local_JPEG = "expectedanswer.jpeg"
-        
-        path_on_cloud_CSV = f"main_ES/{exam_id}/{subject_id}/{exam_id}-{subject_id}_data.csv"
-        path_local_CSV = f"{exam_id}-{subject_id}_data.csv"
+
         #storing in the cloud
         storage.child(path_on_cloud_PDF).put(path_local_PDF)
         storage.child(path_on_cloud_JPEG).put(path_local_JPEG)
         
-    
-        flag = is_file_present(path_on_cloud_CSV,path_local_CSV)
         
-
-        if flag == False:
-            dicts = {"exam_id":exam_id,"subject_id":subject_id,"question_id":qid,"max_marks":max_marks,"question":question}
-
-
-            df = pd.DataFrame(dicts,index=[0])
-            df.to_csv(f"{exam_id}-{subject_id}_data.csv",index =False)
-            print(df)
-            storage.child(path_on_cloud_CSV).put(path_local_CSV)
-    
-        elif flag == True:
-            storage.child(path_on_cloud_CSV).download(path_local_CSV)
-            dicts = {"exam_id":exam_id,"subject_id":subject_id,"question_id":qid,"max_marks":max_marks,"question":question}
-
-            
-            df = pd.read_csv(path_local_CSV)
-            
-
-            index = df[df['question_id'] == int(qid)].index      
-            print(index)
-            #index_list= df(df['question_id'] == qid).index
-            df.drop(index,axis=0,inplace=True)
-
-            df = df._append(dicts,ignore_index=True)
-            print(df)
-            df.to_csv(path_local_CSV,index=False)
-
-            storage.child(path_on_cloud_CSV).put(path_local_CSV)
-           
-
-
-
-        print("[+]Files finished uploading") 
+        print("[+]finished uploading") 
         
         
         return 1
     except Exception as e:
-        print(f"[-]Error during uploading : {str(e)}")
+        print(f"[-]Error during evaluation : {str(e)}")
         return -1
 
 
 
-        
-
-    
-
-        
-
-
-        
-            
 
 
 
@@ -200,8 +139,7 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
 
 
 
-
-@es_upload_router.put('/evaluate/esupload')
+@es_upload_router.put('/evaluate/asupload')
 async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str,ES: UploadFile = File()):
     max_marks = str(mark)
     
@@ -214,7 +152,6 @@ async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str
     #print(f"{file_one_path},,{file_two_path}")
     delete_file(file_one_path)
     delete_file("expectedanswer.jpeg")
-   # delete_file(f"{exam_id}-{subject_id}_data.csv")
     
     
     
@@ -225,6 +162,19 @@ async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str
 
     
     return {"data":"[+]uploaded"}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
