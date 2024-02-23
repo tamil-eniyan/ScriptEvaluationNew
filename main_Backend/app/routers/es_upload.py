@@ -141,7 +141,7 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
         
     
         flag = is_file_present(path_on_cloud_CSV,path_local_CSV)
-        
+         
 
         if flag == False:
             dicts = {"exam_id":exam_id,"subject_id":subject_id,"question_id":qid,"max_marks":max_marks,"question":question}
@@ -150,6 +150,7 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
             df = pd.DataFrame(dicts,index=[0])
             df.to_csv(f"{exam_id}-{subject_id}_data.csv",index =False)
             print(df)
+            json_data = df.to_json()
             storage.child(path_on_cloud_CSV).put(path_local_CSV)
     
         elif flag == True:
@@ -167,6 +168,7 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
 
             df = df._append(dicts,ignore_index=True)
             print(df)
+            json_data = df.to_json()
             df.to_csv(path_local_CSV,index=False)
 
             storage.child(path_on_cloud_CSV).put(path_local_CSV)
@@ -177,7 +179,7 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
         print("[+]Files finished uploading") 
         
         
-        return 1
+        return json_data
     except Exception as e:
         print(f"[-]Error during uploading : {str(e)}")
         return -1
@@ -208,7 +210,7 @@ async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str
     file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
     
 
-    result_jpeg_path = uploadfile_main(exam_id,subject_id,file_one_path,q_id,question,max_marks)
+    json_data = uploadfile_main(exam_id,subject_id,file_one_path,q_id,question,max_marks)
     
     
     #print(f"{file_one_path},,{file_two_path}")
@@ -224,7 +226,7 @@ async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str
     #json_data=json.dumps(result)
 
     
-    return {"data":"[+]uploaded"}
+    return json_data
 
 
 

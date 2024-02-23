@@ -12,6 +12,10 @@ import shutil
 from pathlib import Path
 import json
 import pyrebase
+import requests
+import pandas as pd
+import firebase_admin
+from firebase_admin import credentials, storage
 
 
 as_upload_router = APIRouter()
@@ -26,7 +30,8 @@ try:
         "messagingSenderId": "955685431488",
         "appId": "1:955685431488:web:41c163453fa74cfad1a525",
         "measurementId": "G-1M4P9LFB0V",
-        "databaseURL":"https://.firebaseio.com"
+        "databaseURL":"https://scriptevaluation.firebaseio.com",
+        "serviceAccount":"KEYS/firebase_cred.json"
         }
     
     
@@ -34,11 +39,23 @@ try:
 
 
     firebase = pyrebase.initialize_app(cred)
+    storage = firebase.storage()
 
 
 except Exception as e:
-        print(f"[-]Error during importing of pyrebase at es_upload.py : {str(e)}")
+        print(f"[-]Error during importing of pyrebase at as_upload.py : {str(e)}")
         
+
+
+
+def is_file_present(file_path_cloud,file_path_local):
+    try:
+        file  = storage.child(file_path_cloud).download(file_path_local)
+        print(f"[+]File Present at :  {file} ")
+        return True
+    except Exception as e:
+        print(f"[-]csv file not present: {e}")
+        return False
 
 
 
@@ -97,61 +114,110 @@ def pdf2img(pdf_path):
 
 
 
-def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
+def uploadfile_main(exam_id,subject_id,as_PDFpath, qid,student_id):
     extracted_text = ""
     additional_points = ""
     image_string = ""
     try:
         print('[+]uploading...')
 
-        filename = pdf2img(es_PDFpath)
-        es_JPEGpath = Image.open(f"expectedanswer.jpeg")
+        filename = pdf2img(as_PDFpath)
         
         
-        storage = firebase.storage()
-
         
-        path_on_cloud_PDF = f"main_ES/{exam_id}/{subject_id}/{qid}/expectedanswer.pdf"
-        path_local_PDF = "expectedanswer.pdf"
+        
+        path_on_cloud_PDF = f"main_AS/{exam_id}/{subject_id}/{student_id}/{qid}/studentanswer.pdf"
+        path_local_PDF = "studentanswer.pdf"
 
-        path_on_cloud_JPEG = f"main_ES/{exam_id}/{subject_id}/{qid}/expectedanswer.jpeg"
-        path_local_JPEG = "expectedanswer.jpeg"
-
+        path_on_cloud_JPEG = f"main_AS/{exam_id}/{subject_id}/{student_id}/{qid}/studentanswer.jpeg"
+        path_local_JPEG = "studentanswer.jpeg"
+        
+        path_on_cloud_CSV = f"main_ES/{exam_id}/{subject_id}/{exam_id}-{subject_id}_data.csv"
+        path_local_CSV = f"{exam_id}-{subject_id}_data.csv"
         #storing in the cloud
-        storage.child(path_on_cloud_PDF).put(path_local_PDF)
-        storage.child(path_on_cloud_JPEG).put(path_local_JPEG)
+       
+    
+        flag = is_file_present(path_on_cloud_CSV,path_local_CSV)
+         
+
+        if flag == False:
+            print("[-]Evaluation scheme is not present")
+            dicts = {"AS_upload_status":False}
+            return dicts
+    
+        elif flag == True:
+            storage.child(path_on_cloud_CSV).download(path_local_CSV)
+            
+            df = pd.read_csv(path_local_CSV)
+            
+            qid_list = df['question_id'].to_list()
+
+
+            #index = df[df['question_id'] == int(qid)].index
+
+            
+
+            print(qid_list)
+
+            if qid not in str(qid_list):
+                print("[-]Question ID is not pesent")
+                return dicts
+
+            storage.child(path_on_cloud_PDF).put(path_local_PDF)
+            storage.child(path_on_cloud_JPEG).put(path_local_JPEG)
+
+            
+            #index_list= df(df['question_id'] == qid).index
+            #df.drop(index,axis=0,inplace=True)
+
+            #df = df._append(dicts,ignore_index=True)
+            #print(df)
+            #json_data = df.to_json()
+            #df.to_csv(path_local_CSV,index=False)
+
+            #storage.child(path_on_cloud_CSV).put(path_local_CSV)
+           
+ 
+
+            print("[+]Files finished uploading") 
         
         
-        print("[+]finished uploading") 
-        
-        
-        return 1
+        return {"AS_upload_status": True}
     except Exception as e:
-        print(f"[-]Error during evaluation : {str(e)}")
-        return -1
+        print(f"[-]Error during uploading : {str(e)}")
+        return {"AS_upload_status": False}
 
 
 
+        
 
-
-
-
-
-
-
-@es_upload_router.put('/evaluate/asupload')
-async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str,ES: UploadFile = File()):
-    max_marks = str(mark)
-    
-    file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
     
 
-    result_jpeg_path = uploadfile_main(exam_id,subject_id,file_one_path,q_id,question,max_marks)
+        
+        
+            
+
+
+
+
+
+
+
+
+@as_upload_router.put('/evaluate/asupload')
+async def AS_upload(exam_id:str,subject_id:str,student_id:str,q_id:str,ES: UploadFile = File()):
+    
+    
+    file_one_path = save_upload_file(ES, Path(f"studentanswer.pdf"))
+    
+
+    json_data = uploadfile_main(exam_id,subject_id,file_one_path,q_id,student_id)
     
     
     #print(f"{file_one_path},,{file_two_path}")
     delete_file(file_one_path)
-    delete_file("expectedanswer.jpeg")
+    delete_file("studentanswer.jpeg")
+    delete_file(f"{exam_id}-{subject_id}_data.csv")
     
     
     
@@ -161,7 +227,7 @@ async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str
     #json_data=json.dumps(result)
 
     
-    return {"data":"[+]uploaded"}
+    return json_data
 
 
 

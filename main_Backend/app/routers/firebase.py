@@ -4,7 +4,7 @@ import secrets
 from firebase_admin import credentials, firestore, initialize_app, storage
 from fastapi.security import APIKeyCookie
 
-FIREBASE_CREDENTIALS_PATH = r"KEYS\firebase_cred.json"
+FIREBASE_CREDENTIALS_PATH = r"KEYS/firebase_cred.json"
 
 app = FastAPI()
 secret_key = secrets.token_hex(16)
