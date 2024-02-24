@@ -1,9 +1,3 @@
-
-
-
-
-
-
 from fastapi import APIRouter,File,UploadFile
 import random
 from PIL import Image
@@ -218,6 +212,7 @@ def geminiEvaluate_main(exam_id,subject_id):
                     print("[#]i am max marks: "+str(max_marks))
                     
                     marks_awarded = evaluatemarks(path_local_ES,path_local_AS,str(question),str(max_marks))
+                    marks_awarded = marks_awarded.replace(" ","") 
                     print(f"{marks_awarded}")
                      
                     temp_dicts[q_id] = marks_awarded
@@ -249,8 +244,16 @@ def geminiEvaluate_main(exam_id,subject_id):
             #storage.child(path_on_cloud_CSV).put(path_local_CSV)
            
  
+            path_on_cloud_JSON = f"main_result/{exam_id}/{subject_id}/{exam_id}-{subject_id}_results.json"
+            path_local_JSON = f"{exam_id}-{subject_id}_results.json"
+            print("[+]Files Evaluating Finished")
+            with open(path_local_JSON, 'w') as fp:
+                json.dump(main_dicts, fp)
+                fp.close()
+            print(f"[+]Uploading the results and data at : {path_on_cloud_JSON}")
+            storage.child(path_on_cloud_JSON).put(path_local_JSON)
 
-            print("[+]Files Evaluating Finished") 
+
         
         print(main_dicts)
         return main_dicts
