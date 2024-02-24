@@ -278,10 +278,14 @@ def geminiEvaluate_main(exam_id,subject_id):
 
 
 def cleanup(exam_id,subject_id):
+
+    print("[@.]CLEANING UP")
     delete_file("expectedanswer.jpeg")
     delete_file("studentanswer.jpeg")
     delete_file(f"{exam_id}-{subject_id}_data.csv")
     delete_file(f"{exam_id}-{subject_id}_studentdata.csv")
+    delete_file(f"{exam_id}-{subject_id}_results.json")
+    print("[@+]CLEANING UP DONE!")
 
 
 
