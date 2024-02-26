@@ -16,9 +16,37 @@ import requests
 import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, storage
+from typing import Annotated,List,Union
 
 
 es_upload_router = APIRouter()
+
+
+GEMINI_API = "AIzaSyD-HzbQwUFUN9libpS9NtXvYWVq8ibXCTA"
+
+generation_config = {
+    "temperature": 0,
+    "top_p": 1,
+    "top_k": 1,
+    "max_output_tokens": 400,
+}
+
+safety_settings = [
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+]
+
+
+genai.configure(api_key=GEMINI_API)
+model_vision = genai.GenerativeModel(
+            "gemini-pro-vision", safety_settings=safety_settings
+        )
+
+
+
+
 
 try:
 
@@ -188,6 +216,21 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
 
         
 
+def extract_text(file_path):
+    try:
+        file_img_path = pdf2img(file_path)
+        image = Image.open("question.jpeg")
+
+        response = model_vision.generate_content(["Extract text from the give image , just give me the extracted text no need for any explanation or sorry message ",image])
+    
+        extract_text = response.text
+        print(f"[+]Extracter Question is: {extract_text}")
+
+    except Exception as e:
+        print(f"[-] An error at extract_text : {e}")
+        return (" ")
+
+    return extract_text
     
 
         
@@ -203,22 +246,42 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
 
 
 
-@es_upload_router.put('/evaluate/esupload')
-async def ES_upload(exam_id:str,subject_id:str,question:str , mark: int,q_id:str,ES: UploadFile = File()):
-    max_marks = str(mark)
-    
-    file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
+@es_upload_router.post('/evaluate/esupload')
+async def ES_upload(exam_id:str,subject_id:str, mark: int,question_id:str,question_str:str | None=None ,ES: UploadFile = File(),question_file: UploadFile =  File(None)):
     
 
-    json_data = uploadfile_main(exam_id,subject_id,file_one_path,q_id,question,max_marks)
+    if question_str:
+
+        max_marks = str(mark)
+    
+        file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
+    
+
+        json_data = uploadfile_main(exam_id,subject_id,file_one_path,question_id,question,max_marks)
     
     
     #print(f"{file_one_path},,{file_two_path}")
-    delete_file(file_one_path)
-    delete_file("expectedanswer.jpeg")
+        delete_file(file_one_path)
+        delete_file("expectedanswer.jpeg")
    # delete_file(f"{exam_id}-{subject_id}_data.csv")
-    
-    
+    elif question_file:
+        max_marks = str(mark)
+
+        file_one_path = save_upload_file(ES,Path(f"expectedanswer.pdf"))
+        #print("file size : "+str(len(question_file)))
+
+        question_file_path = save_upload_file(question_file,Path(f"question.pdf"))
+
+        extracted_question = extract_text(question_file_path)
+
+        json_data = uploadfile_main(exam_id,subject_id,file_one_path,question_id,extracted_question,max_marks)
+
+        delete_file(file_one_path)
+        delete_file("expectedanswer.jpeg")
+        delete_file(question_file_path)
+        delete_file("question.jpeg")
+    else:
+        json_data = {"Error":"[-]No Question is Uploaded"}
     
     #return result
     
