@@ -18,9 +18,9 @@ one_api_router = APIRouter()
 GEMINI_API = "AIzaSyD-HzbQwUFUN9libpS9NtXvYWVq8ibXCTA"
 
 generation_config = {
-    "temperature": 0,
-    "top_p": 1,
-    "top_k": 1,
+    "temperature": 1,
+    "top_p": 0.50,
+    "top_k": 40,
     "max_output_tokens": 400,
 }
 
@@ -97,7 +97,7 @@ def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks):
         
         genai.configure(api_key=GEMINI_API)
         model_vision = genai.GenerativeModel(
-            "gemini-pro-vision", safety_settings=safety_settings
+            "gemini-pro-vision", safety_settings=safety_settings ,generation_config=generation_config
         )
 
         response = model_vision.generate_content(
@@ -131,6 +131,51 @@ def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks):
 
 
 
+def evaluate_answer_2(expectedAnswer, studentAnswerpath, question, max_marks):
+    extracted_text = ""
+    additional_points = ""
+    image_string = ""
+    try:
+        print('[+]evaluating....')
+
+        image_string = pdf2img(studentAnswerpath)
+        studentAnswer = Image.open("temp.jpeg")
+        
+        
+        genai.configure(api_key=GEMINI_API)
+        model_vision = genai.GenerativeModel(
+            "gemini-pro-vision", safety_settings=safety_settings
+        )
+
+        response = model_vision.generate_content(
+            [
+                f"You are a Answerscript Evluation Machine you read answer script and evaluate the answer now evaluate the answer of the question {question} , the expected answer is {expectedAnswer} , and the maximum marks you can award is {max_marks} ,the question is a numerical type hence the last answer writtern by the student is is very important and neededd too be evluated accordingly , please Evaluate them and give me json file with  the marksout of {max_marks} and the explination why the mark was given(just two key:value pairs marks,explanation)",
+                studentAnswer,
+            ]
+        )
+
+        text = response.text
+
+      
+       
+        text = text.split("```")[1]
+        text = text.replace("\\n","")
+        text = text.replace("json","")
+        text = text.replace("\\","")
+        text = text.lower()
+
+        print(f"{text}")
+        
+        return text
+    except Exception as e:
+        print(f"[-]Error during evaluation : {str(e)}")
+        print(expectedAnswerpath)
+        print(studentAnswerpath)
+        print(question)
+        print(max_marks)
+        return -1
+
+
 
 
 
@@ -138,22 +183,38 @@ def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks):
 
 
 @one_api_router.post('/evaluate/one')
-async def One_Question(question:str , mark: str,ES: UploadFile = File(),AS: UploadFile=File()):
-    max_marks = str(mark)
-    
-    file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
-    file_two_path = save_upload_file(AS, Path(f"studentanswer.pdf"))
+async def One_Question(question:str , mark: str,Expected_answer:str|None=None,ES: UploadFile = File(None),AS: UploadFile=File()):
 
-    result = evaluate_answer(file_one_path, file_two_path,question,max_marks)
+    max_marks = str(mark)
+    if ES:
+        file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
+        file_two_path = save_upload_file(AS, Path(f"studentanswer.pdf"))
+
+        result = evaluate_answer(file_one_path, file_two_path,question,max_marks)
     
     
     #print(f"{file_one_path},,{file_two_path}")
-    delete_file(file_one_path)
-    delete_file(file_two_path)
-    delete_file('temp.jpeg') 
-    print('[+] Evaluation complited')
+        delete_file(file_one_path)
+        delete_file(file_two_path)
+        delete_file('temp.jpeg') 
+        print('[+] Evaluation complited')
     #return result
+    elif Expected_answer:
+        #file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
+        file_two_path = save_upload_file(AS, Path(f"studentanswer.pdf"))
+
+        result = evaluate_answer_2(Expected_answer, file_two_path,question,max_marks)
     
+    
+    #print(f"{file_one_path},,{file_two_path}")
+        
+        delete_file(file_two_path)
+        delete_file('temp.jpeg') 
+        print('[+] Evaluation complited')
+    else:
+        result = {" Error ": "No Expected answer"}
+         
+
 
     json_data=json.dumps(result)
 
