@@ -71,8 +71,12 @@ def save_upload_file(upload_file: UploadFile, destination: Path) -> str:
     return file_name
 
 
+
 def delete_file(filename):
-    os.remove(filename)
+    try:
+        os.remove(filename)
+    except:
+        print("[-]File cannot be deleted as it is not present")
 
 
 
@@ -204,7 +208,7 @@ def uploadfile_main(exam_id,subject_id,as_PDFpath, qid,student_id):
 
 
 
-@as_upload_router.put('/evaluate/asupload')
+@as_upload_router.post('/evaluate/asupload')
 async def AS_upload(exam_id:str,subject_id:str,student_id:str,q_id:str,ES: UploadFile = File()):
     
     
@@ -217,7 +221,7 @@ async def AS_upload(exam_id:str,subject_id:str,student_id:str,q_id:str,ES: Uploa
     #print(f"{file_one_path},,{file_two_path}")
     delete_file(file_one_path)
     delete_file("studentanswer.jpeg")
-    delete_file(f"{exam_id}-{subject_id}_data.csv")
+    #delete_file(f"{exam_id}-{subject_id}_data.csv")
     
     
     
