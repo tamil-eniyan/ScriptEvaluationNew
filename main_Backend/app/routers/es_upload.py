@@ -257,7 +257,7 @@ async def ES_upload(exam_id:str,subject_id:str, mark: int,question_id:str,questi
         file_one_path = save_upload_file(ES, Path(f"expectedanswer.pdf"))
     
 
-        json_data = uploadfile_main(exam_id,subject_id,file_one_path,question_id,question,max_marks)
+        json_data = uploadfile_main(exam_id,subject_id,file_one_path,question_id,question_str,max_marks)
     
     
     #print(f"{file_one_path},,{file_two_path}")
