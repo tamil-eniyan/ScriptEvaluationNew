@@ -80,6 +80,8 @@ def is_file_present(file_path_cloud,file_path_local):
     try:
         file  = storage.child(file_path_cloud).download(file_path_local)
         print(f"[+]File Present at :  {file} ")
+        print(file_path_cloud)
+        print(file_path_local)
         return True
     except Exception as e:
         print(f"[-]csv file not present: {e}")
@@ -164,7 +166,7 @@ def uploadfile_main(exam_id,subject_id,es_PDFpath, qid, question, max_marks):
         path_local_JPEG = "expectedanswer.jpeg"
         
         path_on_cloud_CSV = f"main_ES/{exam_id}/{subject_id}/{exam_id}-{subject_id}_data.csv"
-        path_local_CSV = f"{exam_id}-{subject_id}_data.csv"
+        path_local_CSV = f"test101-101_data.csv"
         #storing in the cloud
         storage.child(path_on_cloud_PDF).put(path_local_PDF)
         storage.child(path_on_cloud_JPEG).put(path_local_JPEG)
