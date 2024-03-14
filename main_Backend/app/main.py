@@ -4,6 +4,7 @@ from routers.es_upload import es_upload_router
 from routers.as_upload import as_upload_router
 from routers.geminievaluate import geminiEvaluate_api_router
 from routers.firebase import firebase_API
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -13,6 +14,16 @@ from routers.firebase import firebase_API
 try:
 
     app = FastAPI()
+    origins = [
+         "http://localhost:5173"
+    ]
+    app.add_middleware(
+         CORSMiddleware,
+         allow_origins = ["*"],
+         allow_credentials = True,
+         allow_headers = ["*"],
+         allow_methods = ["*"]
+    )
 
     @app.get("/",tags=["root"])
     async def root():

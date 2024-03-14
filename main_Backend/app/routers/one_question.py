@@ -104,14 +104,14 @@ def evaluate_answer(expectedAnswerpath, studentAnswerpath, question, max_marks):
 
         testing_template  = """Extract the text and give the output as a json in the format text:"extracted text" """
         try:
-            response = model_vision.generate_content([testing_template, studentAnswer ])
+            response = model_vision.generate_content([template, studentAnswer ])
         except Exception as e:
             print(f"[+]error at gemini api] : {e}")
         text = response.text
 
       
         print(text)
-        text = text.split("```")[1]
+        text = text.split("```")[0]
         text = text.replace("\\n","")
         text = text.replace("json","")
         text = text.replace("\\","")
